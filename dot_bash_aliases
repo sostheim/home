@@ -1,0 +1,33 @@
+alias ll='ls -loa'
+alias envn='env | sort -n'
+alias realias='source ~/.bash_aliases'
+
+# go path subdirs
+alias cdg='cd ${GOPATH}'
+alias cdgwk='cd ${GOPATH}'
+alias cdgb='cd ${GOPATH}/bin'
+alias cdgo='cd ${GOPATH}/golang.org'
+alias cdgp='cd ${GOPATH}/pkg'
+alias cdgs='cd ${GOPATH}/src'
+alias cdgsk8s='cd ${GOPATH}/src/k8s.io'
+alias cdgskube='cd ${GOPATH}/src/k8s.io/kubernetes'
+alias cdgsgh='cd ${GOPATH}/src/github.com'
+alias cdgsme='cd ${GOPATH}/src/github.com/sostheim'
+
+# kraken
+alias cdkrak='cd ${GOPATH}/src/github.com/${KRAK_REPO_HOME}/kraken'
+
+# k2 (kraken2)
+alias cdk2='cd ${GOPATH}/src/github.com/${KRAK_REPO_HOME}/k2'
+alias cdk2c='cd ~/.kraken'
+alias cdk2s='cd ${GOPATH}/src/github.com/${KRAK_REPO_HOME}/k2-charts'
+
+# kuberetes
+alias k='kubectl'
+alias cdk='cd ${KPATH}'
+alias kctlcurl='kctl run curl --image=radial/busyboxplus:curl -i --tty'
+alias kubectlupdate='curl https://storage.googleapis.com/kubernetes-release/release/v1.8.2/bin/darwin/amd64/kubectl -o `which kubectl`'
+alias gcrsearch='curl -u _token:${GCR_ACCESS_TOKEN} "https://gcr.io/v1/search?q=$1" | python -mjson.tool'
+alias anslog='journalctl -fu ansible-in-docker'
+
+alias countNoVendor='find . -path ./vendor -prune -o -name \*.go -exec wc -l {} \; | cut -c-9 | paste -sd+ - | bc'

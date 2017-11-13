@@ -1,0 +1,64 @@
+# if there is a bashrc - source it here, we may end up over-riding some things here.
+if [ -f ~/.bashrc ]; then
+   source ~/.bashrc
+fi
+
+# add personal bin/*, sbin/*
+export PATH=${PATH}:${HOME}/bin:${HOME}/sbin
+
+# AMTC 
+AMT_PASSWORD=NucNuc123!
+
+# macro for Visual Studio Code
+# code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args $* ;}
+
+# The next line updates PATH for the Google Cloud SDK.
+source '/Users/sostheim/work/bin/bash/google-cloud-sdk/path.bash.inc'
+
+# The next line enables shell command completion for gcloud.
+source '/Users/sostheim/work/bin/bash/google-cloud-sdk/completion.bash.inc'
+
+export JAVA_HOME=$(/usr/libexec/java_home)
+
+# Setting PATH for Python 3.6
+export PATH=${PATH}:/Library/Frameworks/Python.framework/Versions/3.6/bin
+
+# AWS/EC2 definitions
+export PATH=$PATH:~/Library/Python/3.6/bin
+export AWS_ID=ricks
+export AWS_ACCESS_KEY=`cat ~/.aws/env-aws-access-key`
+export AWS_SECRET_KEY=`cat ~/.aws/env-aws-secret-key`
+
+complete -C '/usr/local/aws/bin/aws_completer' aws 
+
+# GCR
+export ACCESS_TOKEN=`cat ~/.ssh/gcr-access-token`
+
+# added to gopath
+export GOPATH=${HOME}/work
+
+# for godep, go-tools, etc...
+export PATH=${PATH}:${GOPATH//://bin:}/bin
+
+# kubernetes
+export KPATH=${GOPATH}/src/k8s.io/kubernetes
+
+# kraken
+# default kraken cluster name (aliases override)
+export KRAK_REPO_HOME=sostheim
+export KRAK_PATH=${GOPATH}/src/github.com/sostheim/kraken
+export PATH=${PATH}:${KRAK_PATH}/bin
+
+export KOPS_NAME=kops.cpe.multi.az.kubeme.io
+export KOPS_STATE_STORE=s3://kops.cpe.multi.az.kubeme.io
+
+if [ -f ~/.bash_aliases ]; then
+   source ~/.bash_aliases
+fi
+
+export GITHUB_TOKEN=`cat ~/.ssh/github-tool-script-token`
+
+function traceroute-mapper {
+  open "http://stefansundin.github.io/traceroute-mapper/?trace=$(traceroute -q1 -m30 $*)"
+}
+
