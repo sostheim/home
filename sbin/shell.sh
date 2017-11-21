@@ -6,22 +6,10 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-
 # set -x
 
-my_dir=$(dirname "${BASH_SOURCE}")
-
-function warn {
-  echo -e "\033[1;33mWARNING: $1\033[0m"
-}
-
-function error {
-  echo -e "\033[0;31mERROR: $1\033[0m"
-}
-
-function inf {
-  echo -e "\033[0;32m$1\033[0m"
-}
+sbin_dir=$(dirname "${BASH_SOURCE}")
+source ${sbin_dir}/utils.sh 
 
 function show_help {
   inf "Usage: \n"
@@ -37,9 +25,11 @@ while [[ $# -gt 0 ]]
 do
 key="$1"
 case $key in
+  # flag with argument
   -f|--flag)
   FLAG_VALUE="$2"
   shift
+  ;;
   -h|--help)
   SCRIPT_HELP=true
   ;;
@@ -50,15 +40,15 @@ esac
 shift # past argument or value
 done
 
+# -h | --help
 if [ -n "${SCRIPT_HELP+x}" ]; then
   show_help
   exit 0
 fi
 
+# required flag argument
 if [ -z "${FLAG_VALUE+x}" ]; then
   show_help
   exit 1
 fi
-
-
 

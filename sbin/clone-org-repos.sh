@@ -7,23 +7,17 @@ set -o nounset
 set -o pipefail
 # set -x
 
+sbin_dir=$(dirname "${BASH_SOURCE}")
+source ${sbin_dir}/utils.sh 
+
 declare -i clone_count=0
+declare -i exist_count=0
 declare -i remaining=1
 declare -i total=0
+declare -i skipped=0
+declare -i existing=0
 
 DRYRUN=false 
-
-function warn {
-  echo -e "\033[1;33mWARNING: $1\033[0m"
-}
-
-function error {
-  echo -e "\033[0;31mERROR: $1\033[0m"
-}
-
-function inf {
-  echo -e "\033[0;32m$1\033[0m"
-}
 
 function show_help {
   inf "Usage:"
@@ -53,12 +47,27 @@ function cloner {
   url="https://api.github.com/orgs/${GITHUB_ORG}/repos?per_page=$1&page=$2"
   for i in `curl -sH "Authorization: token ${GITHUB_OAUTH}" ${url} | grep clone_url | cut -d ':' -f 2- | cut -d '/' -f 3- | tr -d '",'`;
   do 
-      if [ "${DRYRUN}" = true ]; then
-        echo "dryrun: git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i"
+      filename=$(basename $i .git)
+      exists=false
+      if [ -e "${filename}" ]; then
+        exists=true 
+        exist_count+=1
       else
-	      git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i
+        clone_count+=1
       fi
-      clone_count+=1
+      if [ "${DRYRUN}" = true ]; then
+        if [ "${exists}" = true ]; then
+          echo "dryrun: skipping https://$i, local file/directory: ${filename}, already exists."
+        else
+          echo "dryrun: git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i"
+        fi  
+      else
+        if [ "${exists}" = true ]; then
+          echo "skipping https://$i, local file/directory: ${filename}, already exists."
+        else 
+  	      git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i
+        fi
+      fi
   done
 }
 
@@ -124,14 +133,17 @@ fi
 while [[ ${remaining} -gt 0 && ${remaining} -lt 11  ]]
 do
     clone_count=0
+    exist_count=0
     cloner 50 ${remaining}
-    if [ ${clone_count} -eq 50 ]; then
+    if [ $((${clone_count}+${exist_count})) -eq 50 ]; then
     	remaining+=1
     else
     	remaining=0
     fi
 
-    total+=${clone_count}
+    total+=$((${clone_count} + ${exist_count}))
+    cloned+=${clone_count}
+    existing+=${exist_count}
 done
 
-inf "cloned repositories: ${total}"
+inf "Done: repositories: ${total}, cloned: ${cloned}, existing: ${existing}"
