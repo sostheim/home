@@ -17,6 +17,7 @@ declare -i total=0
 declare -i skipped=0
 declare -i existing=0
 
+PULL=false 
 DRYRUN=false 
 
 function show_help {
@@ -27,7 +28,8 @@ function show_help {
   inf "  -o|--org    - Required: GitHub organization name"
   inf "  -u|--user   - Required: GitHub user name"
   inf "  -t|--token  - Required: GitHub users OAuth token"
-  inf "  -d|--dryrun - test execution without actually cloning\n"
+  inf "  -p|--pull   - If a repository exists, pull master [default: skip]"
+  inf "  -d|--dryrun - Test execution without actually cloning\n"
   inf "Example:"
   inf "  $ clone-org-repos.sh --user sostheim --org samsung-cnct --token e72e16c7e42f292c6912e7710c838347ae178b4a"
 }
@@ -47,9 +49,9 @@ function cloner {
   url="https://api.github.com/orgs/${GITHUB_ORG}/repos?per_page=$1&page=$2"
   for i in `curl -sH "Authorization: token ${GITHUB_OAUTH}" ${url} | grep clone_url | cut -d ':' -f 2- | cut -d '/' -f 3- | tr -d '",'`;
   do 
-      filename=$(basename $i .git)
+      dirent=$(basename $i .git)
       exists=false
-      if [ -e "${filename}" ]; then
+      if [ -e "${dirent}" ]; then
         exists=true 
         exist_count+=1
       else
@@ -57,13 +59,17 @@ function cloner {
       fi
       if [ "${DRYRUN}" = true ]; then
         if [ "${exists}" = true ]; then
-          echo "dryrun: skipping https://$i, local file/directory: ${filename}, already exists."
+          echo "dryrun: skipping https://$i, local file/directory: ${dirent}, already exists."
         else
           echo "dryrun: git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i"
         fi  
       else
         if [ "${exists}" = true ]; then
-          echo "skipping https://$i, local file/directory: ${filename}, already exists."
+          if [ "${PULL}" = true ]; then
+            git -C ./${dirent} pull
+          else
+            echo "skipping https://$i, local file/directory: ${dirent}, already exists."
+          fi
         else 
   	      git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i
         fi
@@ -75,9 +81,6 @@ while [[ $# -gt 0 ]]
 do
 key="$1"
 case $key in
-  -d|--dryrun)
-  DRYRUN=true
-  ;;
   -o|--org)
   GITHUB_ORG="$2"
   shift
@@ -89,6 +92,12 @@ case $key in
   -t|--token)
   GITHUB_OAUTH="$2"
   shift
+  ;;
+  -p|--pull)
+  PULL=true
+  ;;
+  -d|--dryrun)
+  DRYRUN=true
   ;;
   -h|--help)
   SCRIPT_HELP=true
