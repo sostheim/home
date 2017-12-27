@@ -51,4 +51,3 @@ if [ -z "${FLAG_VALUE+x}" ]; then
   show_help
   exit 1
 fi
-
