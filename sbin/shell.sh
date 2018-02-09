@@ -6,7 +6,8 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-# set -x
+# set -o xtrace
+# set -o verbose
 
 sbin_dir=$(dirname "${BASH_SOURCE}")
 source ${sbin_dir}/utils.sh 
