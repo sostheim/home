@@ -1,0 +1,89 @@
+--------------------------------------------------------------------------------
+
+Build a generic, all purpose, dev server (Precise 12.04)
+
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade 
+$ sudo apt-get install emacs23-nox xemacs21-nomule 
+
+# if it isn't installed yet...
+
+$ sudo apt-get install unattended-upgrades
+
+# if it doesn't exist, create the following file with the following content:
+
+$ cat /etc/apt/apt.conf.d/10periodic	    
+APT::Periodic::Enable "1";
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "5";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::RandomSleep "1800";
+
+$ sudo apt-get install build-essential
+$ sudo apt-get install subversion bzr git mercurial
+$ sudo apt-get install make cmake autoconf pkg-config flex bison libtool libgcrypt-dev
+
+$ sudo apt-get install python2.7-dev python-pip
+$ sudo pip install --upgrade pip 
+$ sudo pip install --upgrade virtualenv 
+
+$ sudo apt-get install gdb pydb ddd valgrind valkyrie electric-fence libdmalloc5
+$ sudo apt-get install splint jlint pylint
+$ sudo apt-get install libboost-all-dev
+$ sudo apt-get install perl libperl-dev openjdk-7-jdk maven 
+$ sudo apt-get install eclipse
+$ sudo apt-get install doxygen doxypy doxymacs
+$ sudo apt-get install ruby ruby-dev libopenssl-ruby rdoc ri irb 
+$ sudo apt-get install wget curl ssl-cert libcurl4-openssl-dev
+$ sudo apt-get install libiodbc2 libiodbc2-dev
+$ sudo apt-get install apache2-dev libyajl-dev libmysqlclient-dev libsensors4-dev libopenipmi-dev 
+$ sudo apt-get install libpcap-dev librrd-dev rrdtool libvirt-dev librabbitmq-dev
+$ sudo apt-get install sparsehash libcppunit-1.12-1 
+$ sudo apt-get install memcached libmemcached-dev libevent-dev
+
+#
+# Do not install POCO from the APT universe, build from source!
+#
+$ git clone git://github.com/pocoproject/poco.git
+Cloning into poco...
+remote: Counting objects: 50894, done.
+remote: Compressing objects: 100% (5550/5550), done.
+remote: Total 50894 (delta 42228), reused 50800 (delta 42134)
+Receiving objects: 100% (50894/50894), 24.65 MiB | 4.04 MiB/s, done.
+Resolving deltas: 100% (42228/42228), done.
+
+$ cd poco/
+$ ./configure --prefix=/usr
+Configured for Linux
+
+#
+# I had to edit poco/Data/ODBC/ODBC.make and include the following line for 
+# the full compilation to succeed
+#
+POCO_ODBC_LIB = /usr/lib
+
+$ make -s -j4
+$ sudo make -s install
+
+
+----------------------------------------------------------------------------------------------
+
+Build a Spark Distrix System Builder Node Server (Lucid 10.04)
+
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade 
+
+# if it isn't installed yet...
+
+$ sudo apt-get install unattended-upgrades
+
+# if it doesn't exist, create the following file with the following content:
+
+$ cat /etc/apt/apt.conf.d/10periodic	    
+APT::Periodic::Enable "1";
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "5";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::RandomSleep "1800";
