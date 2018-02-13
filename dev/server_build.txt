@@ -1,5 +1,5 @@
+!!! old old old - reference only !!!
 --------------------------------------------------------------------------------
-
 Build a generic, all purpose, dev server (Precise 12.04)
 
 $ sudo apt-get update
@@ -65,25 +65,3 @@ POCO_ODBC_LIB = /usr/lib
 
 $ make -s -j4
 $ sudo make -s install
-
-
-----------------------------------------------------------------------------------------------
-
-Build a Spark Distrix System Builder Node Server (Lucid 10.04)
-
-$ sudo apt-get update
-$ sudo apt-get dist-upgrade 
-
-# if it isn't installed yet...
-
-$ sudo apt-get install unattended-upgrades
-
-# if it doesn't exist, create the following file with the following content:
-
-$ cat /etc/apt/apt.conf.d/10periodic	    
-APT::Periodic::Enable "1";
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Download-Upgradeable-Packages "1";
-APT::Periodic::AutocleanInterval "5";
-APT::Periodic::Unattended-Upgrade "1";
-APT::Periodic::RandomSleep "1800";
