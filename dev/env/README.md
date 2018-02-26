@@ -12,8 +12,8 @@ $ docker push sostheim/gcc-dev-env:latest
 To run in the container:
 ```
 # To run build tools only, use:
-$ docker run -v "$(pwd)":/usr/src/`basename $(pwd)` -it gcc-dev-env
+$ docker run -v "$(pwd)":/usr/src/`basename $(pwd)` -it sostheim/gcc-dev-env
 
 # To run gdb, use:
-$ docker run --security-opt seccomp=unconfined -v "$(pwd)":/usr/src/`basename $(pwd)` -it gcc-dev-env
+$ docker run --security-opt seccomp=unconfined -v "$(pwd)":/usr/src/`basename $(pwd)` -it sostheim/gcc-dev-env
 ```
