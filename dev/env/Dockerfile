@@ -11,13 +11,21 @@ RUN set -ex; \
             flex \
             gdb \
             cppcheck \
-            libpoco-dev \
             libboost-all-dev \
             libcppunit-dev \
             valgrind; \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src
+# replaces libpoco-dev (stable), from the packages list above, with master (latest)
+# allow non-zero exit from make command as some warnings are typical
+RUN set -x; \
+    cd tmp; \
+    git clone https://github.com/pocoproject/poco.git; \
+    cd poco; \
+    ./configure --no-tests --no-samples --omit=Data/MySQL,Data/ODBC,SQL/ODBC,Zip; \
+    make -j2 -s install; \
+    cd ..; \
+    rm -rf poco
 
-CMD ["/bin/bash"]
+WORKDIR /usr/src
 
