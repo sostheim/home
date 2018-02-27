@@ -24,6 +24,7 @@ RUN set -x; \
     cd poco; \
     ./configure --no-tests --no-samples --omit=Data/MySQL,Data/ODBC,SQL/ODBC,Zip; \
     make -j2 -s install; \
+    ldconfig; \
     cd ..; \
     rm -rf poco
 
