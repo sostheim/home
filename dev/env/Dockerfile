@@ -22,11 +22,10 @@ RUN set -x; \
     cd tmp; \
     git clone https://github.com/pocoproject/poco.git; \
     cd poco; \
-    ./configure --no-tests --no-samples --omit=Data/MySQL,Data/ODBC,SQL/ODBC,Zip; \
+    ./configure --static --shared --no-tests --no-samples --omit=Data/MySQL,Data/ODBC,SQL/ODBC,Zip; \
     make -j2 -s install; \
     ldconfig; \
     cd ..; \
     rm -rf poco
 
 WORKDIR /usr/src
-
