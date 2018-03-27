@@ -1,16 +1,12 @@
 #!/bin/bash -
 # title       : repo-stats.sh
-# description : Given a repo, gather statistics about it.
-# api         : https://developer.github.com/v3/repos/collaborators/
-#               https://developer.github.com/v3/repos/statistics/
-#               https://developer.github.com/v3/repos/releases/
+# description : Given a repo, gather statistics about it using the GitHub V3
+#               REST API - https://developer.github.com/v3
 #==============================================================================
 set -o errexit
 set -o nounset
 set -o pipefail
 # set -x
-
-RAW_OUTPUT=false
 
 sbin_dir=$(dirname "${BASH_SOURCE}")
 source ${sbin_dir}/utils.sh 
@@ -23,10 +19,12 @@ function show_help {
   inf "  -r|--repo   - Required: GitHub repository name"
   inf "  -o|--org    - Required: GitHub organization/owner name"
   inf "  -t|--token  - Required: GitHub users OAuth token"
-  inf "  -x          - Output data in row format"
+  inf "  -x          - Output data in row format for collecting in to CSV tables"
   inf "Example:"
   inf "  $ repo-stats.sh --repo lbex --org sostheim --token e72e16c7e42f292c6912e7710c838347ae178b4a"
 }
+
+RAW_OUTPUT=false
 
 while [[ $# -gt 0 ]]
 do
@@ -102,6 +100,7 @@ declare -i merged_pr_count=0
 declare -i closed_pr_count=0
 declare -i commits_30_count=0
 declare -i commits_90_count=0
+declare -i releases_count=0
 
 # $1 -> url
 declare -i paged_count=0
@@ -141,75 +140,87 @@ else
     watches_count=$(jq .subscribers_count <<< ${resp_body}) 
 fi
 
+if [[ ${FORKED} == true ]] && [[ ${RAW_OUTPUT} == true ]] ; then
+    error "unable to generate raw output for forked repositories."
+    exit 1
+fi
+
 paged_resource_counter "${url}/contributors"
 contrib_count=${paged_count}
 
-if [ ${FORKED} == false ] ; then
-    paged_resource_counter "${url}/issues?state=all"
-    issues_count=${paged_count}
-
-    paged_resource_counter "${url}/issues"
-    open_issues_count=${paged_count}
-
-    paged_resource_counter "${url}/issues?state=closed"
-    closed_issues_count=${paged_count}
-
-    paged_resource_counter "${url}/pulls?state=all"
-    pr_count=${paged_count}
-
-    paged_resource_counter "${url}/issues"
-    open_pr_count=${paged_count}
-
-    paged_resource_counter "${url}/pulls?state=closed"
-    closed_pr_count=${paged_count}
-  
-    # Unfortunately there is no such thing as `state=merged` Have to query for all pulls with a merge timestamp/commit sha.
-    # paged_resource_counter "${url}/pulls?state=merged"
-    # merged_pr_count=${paged_count}
-
-    thirty_days_ago=$(date -jv -30d "+%Y-%m-%d")
-    thirty_days_ago="${thirty_days_ago}T00:00:00Z"
-    commits_resp=$(curl -sH "Authorization: token ${GITHUB_OAUTH}" ${url}/commits?since=${thirty_days_ago})
-    LAST_COMMIT=$(jq '.[0].commit.committer.date' <<< ${commits_resp})
-    paged_resource_counter "${url}/commits?since=${thirty_days_ago}"
-    commits_30_count=${paged_count}
-    ninety_days_ago=$(date -jv -90d "+%Y-%m-%d")
-    ninety_days_ago="${ninety_days_ago}T00:00:00Z"
-    paged_resource_counter "${url}/commits?since=${ninety_days_ago}\&until=${thirty_days_ago}"
-    commits_90_count=$(( ${paged_count} + ${commits_30_count} ))
-else
-    if [ ${RAW_OUTPUT} == true ] ; then
-        error "unable to generate raw output for forked repositories."
-        exit 1
-    fi
+if [ ${FORKED} == true ] ; then
+    echo "Github Repository: ${FULL_NAME} (fork: ${FORKED}) - Information and Statistics"
+    echo "        source repositories community statistics: $(jq .parent.full_name <<< ${resp_body})"
+    echo "                stars: ${stars_count}"
+    echo "                forks: ${forks_count}"
+    echo "                contributors: ${contrib_count}"
+    echo "All other statistics only reported for source repositories - not forks"
+    exit 0
 fi
+
+paged_resource_counter "${url}/issues?state=all"
+issues_count=${paged_count}
+
+paged_resource_counter "${url}/issues"
+open_issues_count=${paged_count}
+
+paged_resource_counter "${url}/issues?state=closed"
+closed_issues_count=${paged_count}
+
+paged_resource_counter "${url}/pulls?state=all"
+pr_count=${paged_count}
+
+paged_resource_counter "${url}/issues"
+open_pr_count=${paged_count}
+
+paged_resource_counter "${url}/pulls?state=closed"
+closed_pr_count=${paged_count}
+
+# Unfortunately there is no such thing as `state=merged` Have to query for all pulls with a merge timestamp/commit sha.
+# paged_resource_counter "${url}/pulls?state=merged"
+# merged_pr_count=${paged_count}
+
+commits_resp=$(curl -sH "Authorization: token ${GITHUB_OAUTH}" ${url}/commits)
+LAST_COMMIT=$(jq '.[0].commit.committer.date' <<< ${commits_resp})
+
+thirty_days_ago=$(date -jv -30d "+%Y-%m-%d")
+thirty_days_ago="${thirty_days_ago}T00:00:00Z"
+paged_resource_counter "${url}/commits?since=${thirty_days_ago}"
+commits_30_count=${paged_count}
+
+ninety_days_ago=$(date -jv -90d "+%Y-%m-%d")
+ninety_days_ago="${ninety_days_ago}T00:00:00Z"
+paged_resource_counter "${url}/commits?since=${ninety_days_ago}\&until=${thirty_days_ago}"
+commits_90_count=$(( ${paged_count} + ${commits_30_count} ))
+
+rel_resp=$(curl -sH "Authorization: token ${GITHUB_OAUTH}" ${url}/releases/latest)
+LAST_REL_TAG=$(jq '.tag_name' <<< ${rel_resp})
+LAST_REL_DATE=$(jq '.published_at' <<< ${rel_resp})
+
+paged_resource_counter "${url}/releases"
+releases_count=${paged_count}
 
 echo "Github Repository: ${FULL_NAME} (fork: ${FORKED}) - Information and Statistics"
 if [ ${RAW_OUTPUT} == true ] ; then
-    echo "repo stats: watches, stars, forks, contributors, issues(open, closed, total), pulls(open, closed, total), all issues + pulls(open, closed, total)"
-    echo "${watches_count}, ${stars_count}, ${forks_count}, ${contrib_count}, $((${open_issues_count}-${open_pr_count})), $((${closed_issues_count}-${closed_pr_count})), $((${issues_count}-${pr_count})), ${open_pr_count}, ${closed_pr_count}, ${pr_count}, ${open_issues_count}, ${closed_issues_count}, ${issues_count}"
+    echo "repo stats: watches, stars, forks, contributors, commits(30, 90), releases, last release(tag, date), issues(open, closed, total), pulls(open, closed, total), all issues + pulls(open, closed, total)"
+    echo "${watches_count}, ${stars_count}, ${forks_count}, ${contrib_count}, ${commits_30_count}, ${commits_90_count}, ${releases_count}, ${LAST_REL_TAG}, ${LAST_REL_DATE}, $((${open_issues_count}-${open_pr_count})), $((${closed_issues_count}-${closed_pr_count})), $((${issues_count}-${pr_count})), ${open_pr_count}, ${closed_pr_count}, ${pr_count}, ${open_issues_count}, ${closed_issues_count}, ${issues_count}"
     exit 0
 fi
 
-if [ ${FORKED} == true ] ; then
-    echo "        source repositories community statistics: $(jq .parent.full_name <<< ${resp_body})"
-else
-    echo "        license - ${LICENSE}"
-    echo "        community statistics"
-    echo "                watches: ${watches_count}"
-fi
+echo "        license - ${LICENSE}"
+echo "        community statistics"
+echo "                watches: ${watches_count}"
 echo "                stars: ${stars_count}"
 echo "                forks: ${forks_count}"
 echo "                contributors: ${contrib_count}"
-echo "                last commit date: ${LAST_COMMIT}"
+echo "        commit statistics"
 echo "                commits last 30 days: ${commits_30_count}"
 echo "                commits last 90 days: ${commits_90_count}"
-
-if [ ${FORKED} == true ] ; then
-    echo "All other statistics only reported for source repositories - not forks"
-    exit 0
-fi 
-
+echo "                last commit date: ${LAST_COMMIT}"
+echo "        release statistics (if any)"
+echo "                releases: ${releases_count}"
+echo "                latest release: ${LAST_REL_TAG}"
+echo "                latest release date: ${LAST_REL_DATE}"
 echo "        issues statistics"
 echo "                open: $((${open_issues_count}-${open_pr_count}))"
 echo "                closed: $((${closed_issues_count}-${closed_pr_count}))"
