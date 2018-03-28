@@ -170,7 +170,7 @@ closed_issues_count=${paged_count}
 paged_resource_counter "${url}/pulls?state=all"
 pr_count=${paged_count}
 
-paged_resource_counter "${url}/issues"
+paged_resource_counter "${url}/pulls"
 open_pr_count=${paged_count}
 
 paged_resource_counter "${url}/pulls?state=closed"
