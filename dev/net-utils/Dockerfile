@@ -6,9 +6,11 @@ FROM ubuntu:latest
 RUN set -ex; \
     apt update; \
     apt install -y --no-install-recommends \
-        curl \
         lsb-release \
+        snapd \
+        curl \
         ethtool \
+        dnsutils \
         bridge-utils \
         inetutils-ping \
         inetutils-traceroute \

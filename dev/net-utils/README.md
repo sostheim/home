@@ -3,7 +3,7 @@ The current public [Docker Hub](https://hub.docker.com) image for this Dockerfil
 $ docker pull sostheim/net-utils
 ```
 
-To build the execution/debugging environment image:
+To build the image:
 ```
 $ docker build --rm --pull --tag net-utils:latest .
 ```
