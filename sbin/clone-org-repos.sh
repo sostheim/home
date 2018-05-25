@@ -57,21 +57,28 @@ function cloner {
       else
         clone_count+=1
       fi
-      if [ "${DRYRUN}" = true ]; then
-        if [ "${exists}" = true ]; then
-          echo "dryrun: skipping https://$i, local file/directory: ${dirent}, already exists."
-        else
-          echo "dryrun: git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i"
-        fi  
-      else
-        if [ "${exists}" = true ]; then
-          if [ "${PULL}" = true ]; then
+
+      if [ "${exists}" = true ]; then
+        if [ "${PULL}" = true ]; then
+          if [ "${DRYRUN}" = true ]; then
+            inf "dryrun: updating https://$i, local directory: ${dirent}"
+          else 
+            inf "updating https://$i, local directory: ${dirent}"
             git -C ./${dirent} pull
-          else
-            echo "skipping https://$i, local file/directory: ${dirent}, already exists."
           fi
+        else
+          if [ "${DRYRUN}" = true ]; then
+            inf "dryrun: skipping https://$i, local file/directory: ${dirent}, already exists."
+          else 
+            inf "skipping https://$i, local file/directory: ${dirent}, already exists."
+          fi
+        fi
+      else 
+        if [ "${DRYRUN}" = true ]; then
+          inf "dryrun: cloning repo: https://$i"
         else 
-  	      git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i
+          inf "cloning repo: https://$i"
+          git clone https://${GITHUB_USER}:${GITHUB_OAUTH}@$i
         fi
       fi
   done
